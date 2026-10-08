@@ -6,7 +6,7 @@ struct EditVerseApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            AppShell()
                 .environment(appState)
                 .preferredColorScheme(.dark)
         }

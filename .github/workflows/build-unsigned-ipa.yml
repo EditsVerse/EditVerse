@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       deployment_target:
-        description: "IPHONEOS_DEPLOYMENT_TARGET (default 27.0)"
+        description: "IPHONEOS_DEPLOYMENT_TARGET (default 17.0; bump when iOS 27 SDK exists)"
         required: false
-        default: "27.0"
+        default: "17.0"
 
 permissions:
   contents: read
@@ -42,7 +42,7 @@ jobs:
         id: resolve
         run: |
           set -euo pipefail
-          REQUESTED="${{ github.event.inputs.deployment_target || '27.0' }}"
+          REQUESTED="${{ github.event.inputs.deployment_target || '17.0' }}"
           SDK_VERSION="$(xcrun --sdk iphoneos --show-sdk-version)"
           DEPLOYMENT_TARGET="$(python3 - <<PY
           requested = "$REQUESTED"
@@ -83,7 +83,7 @@ jobs:
             echo "## EditVerse unsigned IPA"
             echo ""
             echo "- Ref: \`${{ github.ref_name }}\`"
-            echo "- Requested iOS: \`${{ github.event.inputs.deployment_target || '27.0' }}\`"
+            echo "- Requested iOS: \`${{ github.event.inputs.deployment_target || '17.0' }}\`"
             echo "- Effective deployment target: \`${{ steps.resolve.outputs.deployment_target }}\`"
             echo "- SDK: \`${{ steps.resolve.outputs.sdk_version }}\`"
             echo "- Artifact: \`EditVerse-unsigned-ipa\`"

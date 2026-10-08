@@ -9,62 +9,83 @@ struct UploadView: View {
     @State private var published = false
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Drop your cut")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(EVTheme.paper)
+        ZStack {
+            EVTheme.void.ignoresSafeArea()
+            LinearGradient(
+                colors: [EVTheme.acid.opacity(0.16), .clear, EVTheme.heat.opacity(0.2)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
-                    Text("MVP: Metadaten + Poster. Echter Video-Upload kommt mit Backend/Storage.")
-                        .font(.system(size: 14, weight: .medium))
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("EDITVERSE")
+                        .font(.system(size: 12, weight: .black))
+                        .tracking(3)
+                        .foregroundStyle(EVTheme.acid)
+                    Text("DROP")
+                        .font(.system(size: 48, weight: .black, design: .rounded))
+                        .foregroundStyle(EVTheme.paper)
+                    Text("Composer for finished cuts. Video binary comes in Phase 1.")
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(EVTheme.mist)
 
-                    EditPoster(
+                    EditCanvas(
                         colors: [EVTheme.ink, EVTheme.acid, EVTheme.heat],
-                        title: title.isEmpty ? "UNTITLED EDIT" : title,
-                        beatDropAt: 0.55
+                        title: title.isEmpty ? "UNTITLED" : title,
+                        beatDropAt: 0.55,
+                        size: CGSize(width: 360, height: 220)
                     )
                     .frame(height: 220)
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .strokeBorder(.white.opacity(0.25), lineWidth: 1)
+                    }
 
-                    field("Title", text: $title)
-                    field("Caption", text: $caption, axis: .vertical)
+                    glassField("Title", text: $title)
+                    glassField("Caption", text: $caption, axis: .vertical)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Tags")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(EVTheme.mist)
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), spacing: 8)], spacing: 8) {
-                            ForEach(EditTag.allCases) { tag in
-                                let on = selectedTags.contains(tag)
-                                Button {
-                                    if on { selectedTags.remove(tag) } else { selectedTags.insert(tag) }
-                                } label: {
-                                    Text(tag.rawValue)
-                                        .font(.system(size: 12, weight: .bold))
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .foregroundStyle(on ? EVTheme.ink : EVTheme.paper)
-                                        .background(on ? EVTheme.acid : EVTheme.panel)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .stroke(EVTheme.line, lineWidth: 1)
-                                        )
-                                }
-                                .buttonStyle(.plain)
+                    Text("Tags")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(EVTheme.mist)
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), spacing: 8)], spacing: 8) {
+                        ForEach(EditTag.allCases) { tag in
+                            let on = selectedTags.contains(tag)
+                            Button {
+                                if on { selectedTags.remove(tag) } else { selectedTags.insert(tag) }
+                            } label: {
+                                Text(tag.rawValue)
+                                    .font(.system(size: 12, weight: .bold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .foregroundStyle(on ? EVTheme.ink : EVTheme.paper)
+                                    .background {
+                                        if on {
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous).fill(EVTheme.acid)
+                                        } else {
+                                            LiquidGlassBackground(cornerRadius: 14, intensity: 0.85)
+                                        }
+                                    }
                             }
+                            .buttonStyle(.plain)
                         }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Duration: \(durationSec)s")
-                            .font(.system(size: 13, weight: .bold))
+                        Text("Duration \(durationSec)s")
+                            .font(EVTheme.hud)
                             .foregroundStyle(EVTheme.mist)
-                        Slider(value: Binding(
-                            get: { Double(durationSec) },
-                            set: { durationSec = Int($0) }
-                        ), in: 3...90, step: 1)
+                        Slider(
+                            value: Binding(
+                                get: { Double(durationSec) },
+                                set: { durationSec = Int($0) }
+                            ),
+                            in: 3...90,
+                            step: 1
+                        )
                         .tint(EVTheme.acid)
                     }
 
@@ -81,44 +102,39 @@ struct UploadView: View {
                         caption = ""
                         appState.selectedTab = .feed
                     } label: {
-                        Text("Publish · +80 XP")
-                            .font(.system(size: 17, weight: .heavy))
+                        Text("PUBLISH · +80 XP")
+                            .font(.system(size: 17, weight: .black, design: .rounded))
                             .foregroundStyle(EVTheme.ink)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                            .padding(.vertical, 18)
                             .background(EVTheme.acid)
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .shadow(color: EVTheme.acid.opacity(0.4), radius: 16, y: 6)
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(16)
-                .padding(.bottom, 28)
+                .padding(.horizontal, 18)
+                .padding(.top, 64)
+                .padding(.bottom, 120)
             }
-            .background(EVTheme.ink.ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline)
-            .alert("Edit live", isPresented: $published) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Dein Edit ist im Feed — XP gutgeschrieben.")
-            }
+        }
+        .alert("Edit live", isPresented: $published) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Im Stage-Feed. XP gutgeschrieben.")
         }
     }
 
-    private func field(_ label: String, text: Binding<String>, axis: Axis = .horizontal) -> some View {
+    private func glassField(_ label: String, text: Binding<String>, axis: Axis = .horizontal) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(EVTheme.mist)
             TextField(label, text: text, axis: axis)
                 .lineLimit(axis == .vertical ? 3...6 : 1...1)
-                .padding(14)
-                .background(EVTheme.panel)
+                .padding(16)
                 .foregroundStyle(EVTheme.paper)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(EVTheme.line, lineWidth: 1)
-                )
+                .background { LiquidGlassBackground(cornerRadius: 18, intensity: 0.9) }
         }
     }
 }

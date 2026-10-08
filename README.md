@@ -2,9 +2,10 @@
 
 Native SwiftUI app — Feed nur für fertige Edits, Challenges, XP/Ranks, Upload-MVP.
 
-**Zielplattform:** iOS 27  
+**Zielplattform:** iOS 17+ (Liquid-Glass-Look; native iOS-27-Glass sobald SDK da)  
 **Bundle ID:** `app.editverse.EditVerse`  
-**Signing:** unsigned (CI baut eine unsigned IPA)
+**Signing:** unsigned (CI baut eine unsigned IPA)  
+**Design:** Vertical full-bleed Stage Feed + Liquid Glass chrome — siehe [`MEGA_PLAN.md`](MEGA_PLAN.md)
 
 ## Private GitHub Repo + Unsigned IPA
 

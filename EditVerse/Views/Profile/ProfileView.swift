@@ -5,59 +5,73 @@ struct ProfileView: View {
     let creator: Creator
     var isMe: Bool = false
 
-    private var resolved: Creator {
-        isMe ? appState.me : creator
-    }
+    private var resolved: Creator { isMe ? appState.me : creator }
 
     private var myPosts: [EditPost] {
         appState.posts.filter { $0.creatorId == resolved.id }
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
+        ZStack {
+            EVTheme.void.ignoresSafeArea()
+            LinearGradient(
+                colors: [Color(hue: resolved.avatarHue, saturation: 0.45, brightness: 0.35).opacity(0.55), .clear],
+                startPoint: .top,
+                endPoint: .center
+            )
+            .ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
-                    HStack(spacing: 14) {
+                    Text("EDITVERSE")
+                        .font(.system(size: 12, weight: .black))
+                        .tracking(3)
+                        .foregroundStyle(EVTheme.acid)
+
+                    HStack(spacing: 16) {
                         Circle()
-                            .fill(Color(hue: resolved.avatarHue, saturation: 0.55, brightness: 0.85))
-                            .frame(width: 72, height: 72)
+                            .fill(Color(hue: resolved.avatarHue, saturation: 0.55, brightness: 0.9))
+                            .frame(width: 84, height: 84)
                             .overlay {
                                 Text(String(resolved.displayName.prefix(1)))
-                                    .font(.system(size: 28, weight: .black))
+                                    .font(.system(size: 32, weight: .black))
                                     .foregroundStyle(.black)
                             }
+                            .overlay { Circle().strokeBorder(.white.opacity(0.4), lineWidth: 1.2) }
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(resolved.displayName)
-                                .font(.system(size: 26, weight: .black, design: .rounded))
+                                .font(.system(size: 30, weight: .black, design: .rounded))
                                 .foregroundStyle(EVTheme.paper)
                             Text("@\(resolved.handle)")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(EVTheme.mist)
-                            Text(resolved.rank.rawValue)
-                                .font(.system(size: 13, weight: .heavy))
+                            Text(resolved.rank.rawValue.uppercased())
+                                .font(.system(size: 12, weight: .heavy))
                                 .foregroundStyle(resolved.rank.accent)
                         }
                     }
 
                     Text(resolved.bio)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(EVTheme.mist)
 
                     XPBar(xp: resolved.xp)
+                        .padding(16)
+                        .background { LiquidGlassBackground(cornerRadius: 22, intensity: 0.95) }
 
-                    HStack {
-                        stat("Edits", "\(resolved.editsCount)")
-                        stat("Followers", compact(resolved.followers))
-                        stat("Streak", "\(resolved.streak)d")
+                    HStack(spacing: 10) {
+                        glassStat("Edits", "\(resolved.editsCount)")
+                        glassStat("Followers", compact(resolved.followers))
+                        glassStat("Streak", "\(resolved.streak)d")
                     }
 
                     Text("Achievements")
-                        .font(.system(size: 18, weight: .black))
+                        .font(.system(size: 20, weight: .black, design: .rounded))
                         .foregroundStyle(EVTheme.paper)
 
                     ForEach(isMe ? appState.achievements : MockData.achievements) { item in
-                        HStack {
+                        HStack(spacing: 12) {
                             Image(systemName: item.unlocked ? "checkmark.seal.fill" : "lock.fill")
                                 .foregroundStyle(item.unlocked ? EVTheme.acid : EVTheme.mist)
                             VStack(alignment: .leading, spacing: 2) {
@@ -71,40 +85,43 @@ struct ProfileView: View {
                             Spacer()
                             if item.xp > 0 {
                                 Text("+\(item.xp)")
-                                    .font(.system(size: 12, weight: .heavy, design: .monospaced))
+                                    .font(EVTheme.hud)
                                     .foregroundStyle(EVTheme.mist)
                             }
                         }
-                        .padding(12)
-                        .background(EVTheme.panel)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .padding(14)
+                        .background { LiquidGlassBackground(cornerRadius: 18, intensity: 0.85) }
                     }
 
-                    Text("Edits")
-                        .font(.system(size: 18, weight: .black))
+                    Text("Reel")
+                        .font(.system(size: 20, weight: .black, design: .rounded))
                         .foregroundStyle(EVTheme.paper)
 
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                         ForEach(myPosts) { post in
-                            EditPoster(
+                            EditCanvas(
                                 colors: post.posterColors,
                                 title: post.title,
                                 beatDropAt: post.beatDropAt,
-                                compact: true
+                                size: CGSize(width: 170, height: 220)
                             )
-                            .frame(height: 160)
+                            .frame(height: 220)
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                    .strokeBorder(.white.opacity(0.2), lineWidth: 1)
+                            }
                         }
                     }
                 }
-                .padding(16)
-                .padding(.bottom, 28)
+                .padding(.horizontal, 18)
+                .padding(.top, 64)
+                .padding(.bottom, 120)
             }
-            .background(EVTheme.ink.ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
-    private func stat(_ label: String, _ value: String) -> some View {
+    private func glassStat(_ label: String, _ value: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 18, weight: .black, design: .monospaced))
@@ -114,9 +131,8 @@ struct ProfileView: View {
                 .foregroundStyle(EVTheme.mist)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(EVTheme.panel)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.vertical, 14)
+        .background { LiquidGlassBackground(cornerRadius: 18, intensity: 0.85) }
     }
 
     private func compact(_ value: Int) -> String {

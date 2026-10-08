@@ -21,18 +21,18 @@ struct XPBar: View {
                 Spacer()
                 if let next {
                     Text("\(xp) / \(next.minXP) XP")
-                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .font(EVTheme.hud)
                         .foregroundStyle(EVTheme.mist)
                 } else {
                     Text("\(xp) XP · MAX")
-                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .font(EVTheme.hud)
                         .foregroundStyle(EVTheme.acid)
                 }
             }
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(EVTheme.line)
+                    Capsule().fill(EVTheme.line.opacity(0.8))
                     Capsule()
                         .fill(
                             LinearGradient(
@@ -42,6 +42,7 @@ struct XPBar: View {
                             )
                         )
                         .frame(width: geo.size.width * progress)
+                        .shadow(color: EVTheme.acid.opacity(0.35), radius: 8)
                 }
             }
             .frame(height: 8)
