@@ -1,0 +1,92 @@
+name: Build Unsigned IPA
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: "IPHONEOS_DEPLOYMENT_TARGET (default 27.0)"
+        required: false
+        default: "27.0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unsigned-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-unsigned-ipa:
+    name: Unsigned IPA (iphoneos)
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode / SDK
+        run: |
+          set -euo pipefail
+          echo "Available Xcode apps:"
+          ls /Applications | grep -i xcode || true
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcodebuild -showsdks
+
+      - name: Resolve deployment target
+        id: resolve
+        run: |
+          set -euo pipefail
+          REQUESTED="${{ github.event.inputs.deployment_target || '27.0' }}"
+          SDK_VERSION="$(xcrun --sdk iphoneos --show-sdk-version)"
+          DEPLOYMENT_TARGET="$(python3 - <<PY
+          requested = "$REQUESTED"
+          sdk = "$SDK_VERSION"
+          def parse(v):
+              parts = [int(x) for x in v.split(".")[:2]]
+              return tuple((parts + [0])[:2])
+          print(requested if parse(sdk) >= parse(requested) else sdk)
+          PY
+          )"
+          echo "deployment_target=$DEPLOYMENT_TARGET" >> "$GITHUB_OUTPUT"
+          echo "sdk_version=$SDK_VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$DEPLOYMENT_TARGET" != "$REQUESTED" ]]; then
+            echo "::warning::Requested iOS $REQUESTED but iphoneos SDK is $SDK_VERSION. Building with $DEPLOYMENT_TARGET."
+          fi
+          echo "Using IPHONEOS_DEPLOYMENT_TARGET=$DEPLOYMENT_TARGET (SDK $SDK_VERSION)"
+
+      - name: Build & package unsigned IPA
+        env:
+          IPHONEOS_DEPLOYMENT_TARGET: ${{ steps.resolve.outputs.deployment_target }}
+        run: |
+          set -euo pipefail
+          chmod +x scripts/package-unsigned-ipa.sh
+          ./scripts/package-unsigned-ipa.sh
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EditVerse-unsigned-ipa
+          path: build/ipa/EditVerse-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## EditVerse unsigned IPA"
+            echo ""
+            echo "- Ref: \`${{ github.ref_name }}\`"
+            echo "- Requested iOS: \`${{ github.event.inputs.deployment_target || '27.0' }}\`"
+            echo "- Effective deployment target: \`${{ steps.resolve.outputs.deployment_target }}\`"
+            echo "- SDK: \`${{ steps.resolve.outputs.sdk_version }}\`"
+            echo "- Artifact: \`EditVerse-unsigned-ipa\`"
+            echo ""
+            echo "Unsigned IPAs cannot be installed via App Store / normal Device Management without a resign (AltStore, Sideloadly, TrollStore, enterprise, etc.)."
+          } >> "$GITHUB_STEP_SUMMARY"
