@@ -31,3 +31,8 @@ Package.resolved
 *.p12
 *.mobileprovision
 AuthKey_*.p8
+
+# Local secrets (never commit)
+.secrets/
+.env
+.env.*
