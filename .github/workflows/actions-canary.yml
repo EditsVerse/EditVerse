@@ -1,0 +1,10 @@
+name: Actions Canary
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ubuntu-canary:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ubuntu actions ok" && uname -a
